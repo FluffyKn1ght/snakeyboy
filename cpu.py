@@ -1480,5 +1480,422 @@ class GameBoyCPU:
                 return 2
             # NOTE: sbc imm8 does not exist
             # =====================================================
+            case 0xA7:  # and a
+                self.f = CPUFlags.H
+
+                if (self.a & self.a) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a &= self.a
+
+                return 1
+            case 0xA0:  # and b
+                self.f = CPUFlags.H
+
+                if (self.a & self.b) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a &= self.b
+
+                return 1
+            case 0xA1:  # and c
+                self.f = CPUFlags.H
+
+                if (self.a & self.c) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a &= self.c
+
+                return 1
+            case 0xA2:  # and d
+                self.f = CPUFlags.H
+
+                if (self.a & self.d) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a &= self.d
+
+                return 1
+            case 0xA3:  # and e
+                self.f = CPUFlags.H
+
+                if (self.a & self.e) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a &= self.e
+
+                return 1
+            case 0xA4:  # and h
+                self.f = CPUFlags.H
+
+                if (self.a & self.h) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a &= self.h
+
+                return 1
+            case 0xA5:  # and l
+                self.f = CPUFlags.H
+
+                if (self.a & self.l) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a &= self.l
+
+                return 1
+            case 0xA6:  # and [hl]
+                value = addrbus.read(self.hl)
+
+                self.f = CPUFlags.H
+
+                if (self.a & value) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a &= value
+
+                return 2
+            case 0xE6:  # and imm8
+                imm8 = addrbus.read(self._advance_pc())
+
+                self.f = CPUFlags.H
+
+                if (self.a & imm8) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a &= imm8
+
+                return 2
+            # =====================================================
+            case 0xB7:  # or a
+                self.f = 0
+
+                if (self.a | self.a) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a |= self.a
+
+                return 1
+            case 0xB0:  # or b
+                self.f = 0
+
+                if (self.a | self.b) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a |= self.b
+
+                return 1
+            case 0xB1:  # or c
+                self.f = 0
+
+                if (self.a | self.c) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a |= self.c
+
+                return 1
+            case 0xB2:  # or d
+                self.f = 0
+
+                if (self.a | self.d) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a |= self.d
+
+                return 1
+            case 0xB3:  # or e
+                self.f = 0
+
+                if (self.a | self.e) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a |= self.e
+
+                return 1
+            case 0xB4:  # or h
+                self.f = 0
+
+                if (self.a | self.h) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a |= self.h
+
+                return 1
+            case 0xB5:  # or l
+                self.f = 0
+
+                if (self.a | self.l) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a |= self.l
+
+                return 1
+            case 0xB6:  # or [hl]
+                value = addrbus.read(self.hl)
+
+                self.f = 0
+
+                if (self.a | value) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a |= value
+
+                return 2
+            case 0xF6:  # or imm8
+                imm8 = addrbus.read(self._advance_pc())
+
+                self.f = 0
+
+                if (self.a | imm8) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a |= imm8
+
+                return 2
+            # =====================================================
+            case 0xAF:  # xor a
+                self.f = 0
+
+                if (self.a ^ self.a) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a ^= self.a
+
+                return 1
+            case 0xA8:  # xor b
+                self.f = 0
+
+                if (self.a ^ self.b) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a ^= self.b
+
+                return 1
+            case 0xA9:  # xor c
+                self.f = 0
+
+                if (self.a ^ self.c) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a ^= self.c
+
+                return 1
+            case 0xAA:  # xor d
+                self.f = 0
+
+                if (self.a ^ self.d) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a ^= self.d
+
+                return 1
+            case 0xAB:  # xor e
+                self.f = 0
+
+                if (self.a ^ self.e) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a ^= self.e
+
+                return 1
+            case 0xAC:  # xor h
+                self.f = 0
+
+                if (self.a ^ self.h) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a ^= self.h
+
+                return 1
+            case 0xAD:  # xor l
+                self.f = 0
+
+                if (self.a ^ self.l) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a ^= self.l
+
+                return 1
+            case 0xAE:  # xor [hl]
+                value = addrbus.read(self.hl)
+
+                self.f = 0
+
+                if (self.a ^ value) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a ^= value
+
+                return 2
+            case 0xEE:  # xor imm8
+                imm8 = addrbus.read(self._advance_pc())
+
+                self.f = 0
+
+                if (self.a ^ imm8) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a ^= imm8
+
+                return 2
+            # =====================================================
+            case 0xBF:  # cp a
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.a & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.a:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.a) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                return 1
+            case 0xB8:  # cp b
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.b & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.b:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.b) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                return 1
+            case 0xB9:  # cp c
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.c & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.c:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.c) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                return 1
+            case 0xBA:  # cp d
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.d & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.d:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.d) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                return 1
+            case 0xBB:  # cp e
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.e & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.e:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.e) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                return 1
+            case 0xBC:  # cp h
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.h & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.h:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.h) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - self.h) & 0xFF
+                return 1
+            case 0xBD:  # cp l
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.l & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.l:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.l) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                return 1
+            case 0xBE:  # cp [hl]
+                value = addrbus.read(self.hl)
+
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (value & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < value:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - value) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                return 2
+            case 0xFE:  # cp imm8
+                imm8 = addrbus.read(self._advance_pc())
+
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (imm8 & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < imm8:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - imm8) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                return 2
+            case
 
         raise IllegalInstruction(f"Unknown opcode {hex(opcode)} at {hex(self.pc)}")
