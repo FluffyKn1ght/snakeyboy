@@ -836,5 +836,695 @@ class GameBoyCPU:
                 self.de = self._stack_pop(addrbus)
             case 0xE1:  # pop hl
                 self.hl = self._stack_pop(addrbus)
+            # =====================================================
+            case 0x87:  # add a
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (self.a & 0xF) + (self.a & 0xF)
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.a
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x80:  # add b
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (self.a & 0xF) + (self.b & 0xF)
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.b
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x81:  # add c
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (self.a & 0xF) + (self.c & 0xF)
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.c
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x82:  # add d
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (self.a & 0xF) + (self.d & 0xF)
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.d
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x83:  # add e
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (self.a & 0xF) + (self.e & 0xF)
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.e
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x84:  # add h
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (self.a & 0xF) + (self.h & 0xF)
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.h
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x85:  # add l
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (self.a & 0xF) + (self.l & 0xF)
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.l
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x86:  # add [hl]
+                value = addrbus.read(self.hl)
+
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (self.a & 0xF) + (value & 0xF)
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + value
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 2
+            case 0xC6:  # add imm8
+                imm8 = addrbus.read(self._advance_pc())
+
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (self.a & 0xF) + (imm8 & 0xF)
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + imm8
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 2
+            # =====================================================
+            case 0x8F:  # adc a
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (
+                    (self.a & 0xF) + (self.a & 0xF) + ((self.f & CPUFlags.C) >> 4)
+                )
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.a + ((self.f & CPUFlags.C) >> 4)
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x88:  # adc b
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (
+                    (self.a & 0xF) + (self.b & 0xF) + ((self.f & CPUFlags.C) >> 4)
+                )
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.b + ((self.f & CPUFlags.C) >> 4)
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x89:  # adc c
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (
+                    (self.a & 0xF) + (self.c & 0xF) + ((self.f & CPUFlags.C) >> 4)
+                )
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.c + ((self.f & CPUFlags.C) >> 4)
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x8A:  # adc d
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (
+                    (self.a & 0xF) + (self.d & 0xF) + ((self.f & CPUFlags.C) >> 4)
+                )
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.d + ((self.f & CPUFlags.C) >> 4)
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x8B:  # adc e
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (
+                    (self.a & 0xF) + (self.e & 0xF) + ((self.f & CPUFlags.C) >> 4)
+                )
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.e + ((self.f & CPUFlags.C) >> 4)
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x8C:  # adc h
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (
+                    (self.a & 0xF) + (self.h & 0xF) + ((self.f & CPUFlags.C) >> 4)
+                )
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.h + ((self.f & CPUFlags.C) >> 4)
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x8D:  # adc l
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (
+                    (self.a & 0xF) + (self.l & 0xF) + ((self.f & CPUFlags.C) >> 4)
+                )
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + self.l + ((self.f & CPUFlags.C) >> 4)
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 1
+            case 0x8E:  # adc [hl]
+                value = addrbus.read(self.hl)
+
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (
+                    (self.a & 0xF) + (value & 0xF) + ((self.f & CPUFlags.C) >> 4)
+                )
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + value + ((self.f & CPUFlags.C) >> 4)
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 2
+            case 0xCE:  # adc imm8
+                imm8 = addrbus.read(self._advance_pc())
+
+                self.f = 0
+
+                # Set half carry flag
+                nibble_result = (
+                    (self.a & 0xF) + (imm8 & 0xF) + ((self.f & CPUFlags.C) >> 4)
+                )
+                if nibble_result >= 0x10:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                byte_result = self.a + imm8 + ((self.f & CPUFlags.C) >> 4)
+                if byte_result >= 0x100:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (byte_result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = byte_result & 0xFF
+                return 2
+            # =====================================================
+            case 0x97:  # sub a
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                # H flag is set whenever a borrow from bit 3 to 4 occurs, which happens
+                # if the lower nibble of A < the lower nibble of n.
+                if (self.a & 0xF) < (self.a & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                # C flag is set whenever a borrow from bit 7 occurs (aka the value of A underflows),
+                # which happens if A < n.
+                if self.a < self.a:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.a) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - self.a) & 0xFF
+                return 1
+            case 0x90:  # sub b
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.b & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.b:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.b) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - self.b) & 0xFF
+                return 1
+            case 0x91:  # sub c
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.c & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.c:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.c) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - self.c) & 0xFF
+                return 1
+            case 0x92:  # sub d
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.d & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.d:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.d) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - self.d) & 0xFF
+                return 1
+            case 0x93:  # sub e
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.e & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.e:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.e) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - self.e) & 0xFF
+                return 1
+            case 0x94:  # sub h
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.h & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.h:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.h) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - self.h) & 0xFF
+                return 1
+            case 0x95:  # sub l
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (self.l & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < self.l:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - self.l) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - self.l) & 0xFF
+                return 1
+            case 0x96:  # sub [hl]
+                value = addrbus.read(self.hl)
+
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (value & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < value:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - value) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - value) & 0xFF
+                return 2
+            case 0xD6:  # sub imm8
+                imm8 = addrbus.read(self._advance_pc())
+
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < (imm8 & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < imm8:
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (self.a - imm8) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - imm8) & 0xFF
+                return 2
+            # =====================================================
+            case 0x9F:  # sbc a
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < ((self.a + ((self.f & CPUFlags.C) >> 4)) & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < (self.a + ((self.f & CPUFlags.C) >> 4)):
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (abs(self.a - (self.a + ((self.f & CPUFlags.C) >> 4))) & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - (self.a + ((self.f & CPUFlags.C) >> 4))) & 0xFF
+                return 1
+            case 0x98:  # sbc b
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < ((self.b + ((self.f & CPUFlags.C) >> 4)) & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < (self.b + ((self.f & CPUFlags.C) >> 4)):
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (abs(self.a - (self.b + ((self.f & CPUFlags.C) >> 4))) & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - (self.b + ((self.f & CPUFlags.C) >> 4))) & 0xFF
+                return 1
+            case 0x99:  # sbc c
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < ((self.c + ((self.f & CPUFlags.C) >> 4)) & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < (self.c + ((self.f & CPUFlags.C) >> 4)):
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (abs(self.a - (self.c + ((self.f & CPUFlags.C) >> 4))) & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - (self.c + ((self.f & CPUFlags.C) >> 4))) & 0xFF
+                return 1
+            case 0x9A:  # sbc d
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < ((self.d + ((self.f & CPUFlags.C) >> 4)) & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < (self.d + ((self.f & CPUFlags.C) >> 4)):
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (abs(self.a - (self.d + ((self.f & CPUFlags.C) >> 4))) & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - (self.d + ((self.f & CPUFlags.C) >> 4))) & 0xFF
+                return 1
+            case 0x9B:  # sbc e
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < ((self.e + ((self.f & CPUFlags.C) >> 4)) & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < (self.e + ((self.f & CPUFlags.C) >> 4)):
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (abs(self.a - (self.e + ((self.f & CPUFlags.C) >> 4))) & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - (self.e + ((self.f & CPUFlags.C) >> 4))) & 0xFF
+                return 1
+            case 0x9C:  # sbc h
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < ((self.h + ((self.f & CPUFlags.C) >> 4)) & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < (self.h + ((self.f & CPUFlags.C) >> 4)):
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (abs(self.a - (self.h + ((self.f & CPUFlags.C) >> 4))) & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - (self.h + ((self.f & CPUFlags.C) >> 4))) & 0xFF
+                return 1
+            case 0x9D:  # sbc l
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < ((self.l + ((self.f & CPUFlags.C) >> 4)) & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < (self.l + ((self.f & CPUFlags.C) >> 4)):
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (abs(self.a - (self.l + ((self.f & CPUFlags.C) >> 4))) & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - (self.l + ((self.f & CPUFlags.C) >> 4))) & 0xFF
+                return 1
+            case 0x9E:  # sbc [hl]
+                value = addrbus.read(self.hl)
+
+                # N flag is always set as we're subtracting
+                self.f = CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) < ((value + ((self.f & CPUFlags.C) >> 4)) & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if self.a < (value + ((self.f & CPUFlags.C) >> 4)):
+                    self.f |= CPUFlags.C
+
+                # Set zero flag
+                if (abs(self.a - (value + ((self.f & CPUFlags.C) >> 4))) & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a = (self.a - (value + ((self.f & CPUFlags.C) >> 4))) & 0xFF
+                return 2
+            # NOTE: sbc imm8 does not exist
+            # =====================================================
 
         raise IllegalInstruction(f"Unknown opcode {hex(opcode)} at {hex(self.pc)}")
