@@ -96,11 +96,6 @@ class GameBoyCPU:
             - to (int) - The new value of the PC
         """
 
-        while to < 0:
-            to += 0xFFFF
-        while to > 0xFFFF:
-            to -= 0xFFFF
-
         self._pc = to
 
     @property
@@ -121,11 +116,6 @@ class GameBoyCPU:
             - to (int) - The new value of the SP
         """
 
-        while to < 0:
-            to += 0xFFFF
-        while to > 0xFFFF:
-            to -= 0xFFFF
-
         self._sp = to
 
     @property
@@ -145,11 +135,6 @@ class GameBoyCPU:
         Arguments:
             - to (int): The new value of the A register
         """
-
-        while to < 0:
-            to += 0xFF
-        while to > 0xFF:
-            to -= 0xFF
 
         self._a = to & 0xFF
 
@@ -172,11 +157,6 @@ class GameBoyCPU:
             - to (int): The new value of the F register
         """
 
-        while to < 0:
-            to += 0xFF
-        while to > 0xFF:
-            to -= 0xFF
-
         self._f = to & 0xF0
 
     @property
@@ -196,11 +176,6 @@ class GameBoyCPU:
         Arguments:
             - to (int): The new value of the B register
         """
-
-        while to < 0:
-            to += 0xFF
-        while to > 0xFF:
-            to -= 0xFF
 
         self._b = to & 0xFF
 
@@ -222,11 +197,6 @@ class GameBoyCPU:
             - to (int): The new value of the C register
         """
 
-        while to < 0:
-            to += 0xFF
-        while to > 0xFF:
-            to -= 0xFF
-
         self._c = to & 0xFF
 
     @property
@@ -246,11 +216,6 @@ class GameBoyCPU:
         Arguments:
             - to (int): The new value of the D register
         """
-
-        while to < 0:
-            to += 0xFF
-        while to > 0xFF:
-            to -= 0xFF
 
         self._d = to & 0xFF
 
@@ -272,11 +237,6 @@ class GameBoyCPU:
             - to (int): The new value of the E register
         """
 
-        while to < 0:
-            to += 0xFF
-        while to > 0xFF:
-            to -= 0xFF
-
         self._e = to & 0xFF
 
     @property
@@ -297,11 +257,6 @@ class GameBoyCPU:
             to (int): The new value of the H register
         """
 
-        while to < 0:
-            to += 0xFF
-        while to > 0xFF:
-            to -= 0xFF
-
         self._h = to & 0xFF
 
     @property
@@ -321,11 +276,6 @@ class GameBoyCPU:
         Arguments:
             to (int): The new value of the L register
         """
-
-        while to < 0:
-            to += 0xFF
-        while to > 0xFF:
-            to -= 0xFF
 
         self._l = to & 0xFF
 
@@ -349,6 +299,7 @@ class GameBoyCPU:
             - to (int): The new value of the AF register pair
         """
 
+        to &= 0xFFFF
         self.a = (to & 0xFF00) >> 8
         self.f = to & 0xF0
 
@@ -372,6 +323,7 @@ class GameBoyCPU:
             - to (int): The new value of the BC register pair
         """
 
+        to &= 0xFFFF
         self.b = (to & 0xFF00) >> 8
         self.c = to & 0xFF
 
@@ -395,6 +347,7 @@ class GameBoyCPU:
             - to (int): The new value of the DE register pair
         """
 
+        to &= 0xFFFF
         self.d = (to & 0xFF00) >> 8
         self.e = to & 0xFF
 
@@ -418,6 +371,7 @@ class GameBoyCPU:
             - to (int): The new value of the HL register pair
         """
 
+        to &= 0xFFFF
         self.h = (to & 0xFF00) >> 8
         self.l = to & 0xFF
 
