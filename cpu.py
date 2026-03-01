@@ -51,6 +51,21 @@ class CPUFlags:
     C = 0b00010000
 
 
+class ArmState:
+    """Contains representations for all possible states of instructions that require arming (take effect only after the next instruction).
+    (Example: halt, stop, ei/di)
+
+    Values:
+        - NOT_ARMED - Not halted/stopped (or doesn't matter), and not armed
+        - ARMED - Not halted/stopped (or doesn't matter), but armed
+        - ACTIVE - Halted/stopped
+    """
+
+    NOT_ARMED = 0
+    ARMED = 1
+    ACTIVE = 2
+
+
 class GameBoyCPU:
     """Represents the CPU of a Sharp LR35902 SoC from the classic DMG (Dot Matrix Game) GameBoy.
 
@@ -59,9 +74,7 @@ class GameBoyCPU:
         af, bc, de, hl (int) - Abstractions for 16-bit register access
         pc (int) - Abstraction for the program counter with overflow/underflow behaviour
         sp (int) - Abstraction for the stack pointer with overflow/underflow behaviour
-
-    Attributes:
-        ime (bool) - Interrupt master enable
+        halted, stopped, ei_armed, di_armed (bool) - Abstractions for halt (wait until interrupt)/stop (ultra-low-power mode) states, as well as ei/di instruction states
     """
 
     def __init__(self) -> None:
@@ -79,7 +92,12 @@ class GameBoyCPU:
         self._pc = 0
         self._sp = 0
 
-        self.ime = False
+        self._halt_state = ArmState.NOT_ARMED
+        self._stop_state = ArmState.NOT_ARMED
+        self._ei_state = ArmState.NOT_ARMED
+        self._di_state = ArmState.NOT_ARMED
+
+        self._ime = False
 
     @property
     def pc(self) -> int:
@@ -378,6 +396,120 @@ class GameBoyCPU:
         self.h = (to & 0xFF00) >> 8
         self.l = to & 0xFF
 
+    @property
+    def halted(self) -> bool:
+        """Gets the current halt status of the CPU - `True` if it's halted (waiting for an interrupt) and `False` otherwise.
+
+        Setting this property to `True` will arm the halt state - the CPU will halt after running the next instruction.
+        Setting this property to `False` will immidiately end the halt state.
+
+        Returns:
+            (bool) Whether the CPU is currently halted or not
+        """
+
+        return self._halt_state == ArmState.ACTIVE
+
+    @halted.setter
+    def halted(self, to: bool) -> None:
+        """(Setter method - use `self.halted = ...` instead)
+
+        Arms the halt state of the CPU if `to` is `True`, ends the halt state if it's `False`.
+
+        Arguments:
+            - to (int): Whether to arm the halt state or to end it
+        """
+
+        if to:
+            if self._halt_state == ArmState.NOT_ARMED:
+                self._halt_state = ArmState.ARMED
+        else:
+            self._halt_state = ArmState.NOT_ARMED
+
+    @property
+    def stopped(self) -> bool:
+        """Gets the current stop status of the CPU - `True` if it's stopped (ultra-low-power mode) and `False` otherwise.
+
+        Setting this property to `True` will arm the stop state - the CPU will stop after running the next instruction.
+        Setting this property to `False` will immidiately end the stop state.
+
+        Returns:
+            (bool) Whether the CPU is currently halted or not
+        """
+
+        return self._stop_state == ArmState.ACTIVE
+
+    @stopped.setter
+    def stopped(self, to: bool) -> None:
+        """(Setter method - use `self.stopped = ...` instead)
+
+        Arms the stop state of the CPU if `to` is `True`, ends the stop state if it's `False`.
+
+        Arguments:
+            - to (int): Whether to arm the stop state or to end it
+        """
+
+        if to:
+            if self._stop_state == ArmState.NOT_ARMED:
+                self._stop_state = ArmState.ARMED
+        else:
+            self._stop_state = ArmState.NOT_ARMED
+
+    @property
+    def ei_armed(self) -> bool:
+        """Gets the current armed status of the EI instruction - `True` if IME will be **enabled** after executing the next instruction, `False` otherwise.
+
+        Setting this property to `True` will arm IME to be enabled after the next instruction, *if* the IME is currently disabled.
+        Setting this property to `False` has no effect.
+
+        Returns:
+            (bool) The armed status of the EI instruction
+        """
+
+        return self._ei_state == ArmState.ARMED
+
+    @ei_armed.setter
+    def ei_armed(self, to: bool) -> None:
+        """(Setter method - use `self.ei_armed = ...` instead)
+
+        Arms the IME to be **enabled** after the next instruction is executed if `to` is `True`.
+
+        Attributes:
+            - to (bool): Must be `True` to arm, otherwise no effect
+        """
+
+        if to:
+            if not self._ime:
+                if self._ei_state == ArmState.NOT_ARMED:
+                    self._ei_state = ArmState.ARMED
+
+    @property
+    def di_armed(self) -> bool:
+        """Gets the current armed status of the DI instruction - `True` if IME will be **disabled** after executing the next instruction, `False` otherwise.
+
+        Setting this property to `True` will arm IME to be disabled after the next instruction, *if* the IME is currently enabled.
+        Setting this property to `False` has no effect.
+
+        Returns:
+            (bool) The armed status of the DI instruction
+        """
+
+        return self._ei_state == ArmState.ARMED
+
+    @di_armed.setter
+    def di_armed(self, to: bool) -> None:
+        """(Setter method - use `self.di_armed = ...` instead)
+
+        Arms the IME to be **enabled** after the next instruction is executed if `to` is `True`.
+
+        Attributes:
+            - to (bool): Must be `True` to arm, otherwise no effect
+        """
+
+        if to:
+            if not self._ime:
+                if self._di_state == ArmState.NOT_ARMED:
+                    self._di_state = ArmState.ARMED
+
     def _advance_pc(self) -> int:
         # Increments the PC and returns its previous value
 
@@ -414,6 +546,8 @@ class GameBoyCPU:
         Raises:
             - IllegalInstruction - An unknown opcode was hit
         """
+
+        # TODO: Handle armed stuff (halt/stop/ei/di)
 
         opcode = addrbus.read(self._advance_pc())
 
@@ -2228,5 +2362,177 @@ class GameBoyCPU:
 
                 return 2
             # =====================================================
+            case 0x27:  # daa
+                adjust = 0
+                carry = 0
+
+                # Decimal adjust register A after an ALU operation involving BCD numbers.
+                if not (self.f & CPUFlags.N):
+                    # Addition
+                    lower_nibble = self.a & 0xF
+                    if (self.f & CPUFlags.H) or (lower_nibble > 9):
+                        adjust += 0x06
+
+                    upper_nibble = (self.a & 0xF0) >> 4
+                    if (self.f & CPUFlags.C) or (upper_nibble > 9):
+                        adjust += 0x60
+                        carry = CPUFlags.C
+                else:
+                    # Subtraction
+                    if self.f & CPUFlags.H:
+                        adjust -= 0x06
+
+                    if self.c & CPUFlags.C:
+                        adjust -= 0x60
+
+                result = self.a + adjust
+
+                if result > 0xFF:
+                    result &= 0xFF
+                    carry = CPUFlags.C
+
+                self.a = result
+
+                self.f &= CPUFlags.N
+
+                if (result & 0xFF) == 0:
+                    self.f |= CPUFlags.Z
+
+                self.f |= CPUFlags.C & carry
+
+                return 1
+            # =====================================================
+            case 0x2F:  # cpl
+                self.a = ~self.a
+                return 1
+            # =====================================================
+            case 0x3F:  # ccf
+                carry = self.f & CPUFlags.C
+                self.f &= CPUFlags.Z
+                self.f |= ~carry & CPUFlags.C
+                return 1
+            # =====================================================
+            case 0x37:  # scf
+                self.f &= CPUFlags.Z
+                self.f |= CPUFlags.C
+                return 1
+            # =====================================================
+            case 0x00:  # nop
+                # *insert carefree fox noises*
+                return 1
+            case 0x76:  # halt
+                # *insert tired fox noises*
+                self.halted = True
+                return 1
+            case 0x10:  # stop
+                # *insert sleeping fox noises*
+                self.stopped = True
+                return 1
+            # =====================================================
+            case 0xF3:  # di
+                self.di_armed = True
+                return 1
+            case 0xFB:  # ei
+                self.ei_armed = True
+                return 1
+            # Some opcodes are prefixed with 0xCB
+            case 0xCB:
+                opcode2 = addrbus.read(self._advance_pc())
+                match opcode2:
+                    case 0x37:  # swap a
+                        self.f = 0
+
+                        lower_nibble = self.a & 0xF
+                        upper_nibble = (self.a & 0xF0) >> 4
+
+                        if ((lower_nibble << 4) | upper_nibble) == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.a = (lower_nibble << 4) | upper_nibble
+                        return 2
+                    case 0x30:  # swap b
+                        self.f = 0
+
+                        lower_nibble = self.b & 0xF
+                        upper_nibble = (self.b & 0xF0) >> 4
+
+                        if ((lower_nibble << 4) | upper_nibble) == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.b = (lower_nibble << 4) | upper_nibble
+                        return 2
+                    case 0x31:  # swap c
+                        self.f = 0
+
+                        lower_nibble = self.c & 0xF
+                        upper_nibble = (self.c & 0xF0) >> 4
+
+                        if ((lower_nibble << 4) | upper_nibble) == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.c = (lower_nibble << 4) | upper_nibble
+                        return 2
+                    case 0x32:  # swap d
+                        self.f = 0
+
+                        lower_nibble = self.d & 0xF
+                        upper_nibble = (self.d & 0xF0) >> 4
+
+                        if ((lower_nibble << 4) | upper_nibble) == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.d = (lower_nibble << 4) | upper_nibble
+                        return 2
+                    case 0x33:  # swap e
+                        self.f = 0
+
+                        lower_nibble = self.e & 0xF
+                        upper_nibble = (self.e & 0xF0) >> 4
+
+                        if ((lower_nibble << 4) | upper_nibble) == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.e = (lower_nibble << 4) | upper_nibble
+                        return 2
+                    case 0x34:  # swap h
+                        self.f = 0
+
+                        lower_nibble = self.h & 0xF
+                        upper_nibble = (self.h & 0xF0) >> 4
+
+                        if ((lower_nibble << 4) | upper_nibble) == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.h = (lower_nibble << 4) | upper_nibble
+                        return 2
+                    case 0x35:  # swap l
+                        self.f = 0
+
+                        lower_nibble = self.l & 0xF
+                        upper_nibble = (self.l & 0xF0) >> 4
+
+                        if ((lower_nibble << 4) | upper_nibble) == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.l = (lower_nibble << 4) | upper_nibble
+                        return 2
+                    case 0x36:  # swap [hl]
+                        value = addrbus.read(self.hl)
+
+                        self.f = 0
+
+                        lower_nibble = value & 0xF
+                        upper_nibble = (value & 0xF0) >> 4
+
+                        if ((lower_nibble << 4) | upper_nibble) == 0:
+                            self.f |= CPUFlags.Z
+
+                        value = (lower_nibble << 4) | upper_nibble
+                        addrbus.write(self.hl, value)
+                        return 4
+
+                raise IllegalInstruction(
+                    f"Unknown opcode {hex(opcode)} {hex(opcode2)} at {hex(self.pc)}"
+                )
 
         raise IllegalInstruction(f"Unknown opcode {hex(opcode)} at {hex(self.pc)}")
