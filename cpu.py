@@ -1896,5 +1896,229 @@ class GameBoyCPU:
                     self.f |= CPUFlags.Z
 
                 return 2
+            # =====================================================
+            case 0x3C:  # inc a
+                self.f &= CPUFlags.C
+
+                # Set half carry flag
+                if (self.a & 0xF) + 1 > 0xFF:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.a + 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a += 1
+                return 1
+            case 0x04:  # inc b
+                self.f &= CPUFlags.C
+
+                # Set half carry flag
+                if (self.b & 0xF) + 1 > 0xFF:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.b + 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.b += 1
+                return 1
+            case 0x0C:  # inc c
+                self.f &= CPUFlags.C
+
+                # Set half carry flag
+                if (self.c & 0xF) + 1 > 0xFF:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.c + 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.c += 1
+                return 1
+            case 0x14:  # inc d
+                self.f &= CPUFlags.C
+
+                # Set half carry flag
+                if (self.d & 0xF) + 1 > 0xFF:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.d + 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.d += 1
+                return 1
+            case 0x1C:  # inc e
+                self.f &= CPUFlags.C
+
+                # Set half carry flag
+                if (self.e & 0xF) + 1 > 0xFF:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.e + 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.e += 1
+                return 1
+            case 0x24:  # inc h
+                self.f &= CPUFlags.C
+
+                # Set half carry flag
+                if (self.h & 0xF) + 1 > 0xFF:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.h + 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.h += 1
+                return 1
+            case 0x2C:  # inc l
+                self.f &= CPUFlags.C
+
+                # Set half carry flag
+                if (self.l & 0xF) + 1 > 0xFF:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.l + 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.l += 1
+                return 1
+            case 0x34:  # inc [hl]
+                value = addrbus.read(self.hl)
+
+                self.f &= CPUFlags.C
+
+                # Set half carry flag
+                if (value & 0xF) + 1 > 0xFF:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (value + 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                value += 1
+                addrbus.write(self.hl, value)
+                return 3
+            # =====================================================
+            case 0x3D:  # dec a
+                self.f &= CPUFlags.C
+                self.f |= CPUFlags.N
+
+                # Set half carry flag
+                if (self.a & 0xF) == 0:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.a - 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.a -= 1
+                return 1
+            case 0x05:  # dec b
+                self.f &= CPUFlags.C
+                self.f |= CPUFlags.N
+
+                # Set half carry flag
+                if (self.b & 0xF) == 0:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.b - 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.b -= 1
+                return 1
+            case 0x0D:  # dec c
+                self.f &= CPUFlags.C
+                self.f |= CPUFlags.N
+
+                # Set half carry flag
+                if (self.c & 0xF) == 0:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.c - 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.c -= 1
+                return 1
+            case 0x15:  # dec d
+                self.f &= CPUFlags.C
+                self.f |= CPUFlags.N
+
+                # Set half carry flag
+                if (self.d & 0xF) == 0:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.d - 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.d -= 1
+                return 1
+            case 0x1D:  # dec e
+                self.f &= CPUFlags.C
+                self.f |= CPUFlags.N
+
+                # Set half carry flag
+                if (self.e & 0xF) == 0:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.e - 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.e -= 1
+                return 1
+            case 0x25:  # dec h
+                self.f &= CPUFlags.C
+                self.f |= CPUFlags.N
+
+                # Set half carry flag
+                if (self.h & 0xF) == 0:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.h - 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.h -= 1
+                return 1
+            case 0x2D:  # dec l
+                self.f &= CPUFlags.C
+                self.f |= CPUFlags.N
+
+                # Set half carry flag
+                if (self.l & 0xF) == 0:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (self.l - 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                self.l -= 1
+                return 1
+            case 0x35:  # inc [hl]
+                value = addrbus.read(self.hl)
+
+                self.f &= CPUFlags.C
+                self.f |= CPUFlags.N
+
+                # Set half carry flag
+                if (value & 0xF) == 0:
+                    self.f |= CPUFlags.H
+
+                # Set zero flag
+                if (value - 1) & 0xFF == 0:
+                    self.f |= CPUFlags.Z
+
+                value -= 1
+                addrbus.write(self.hl, value)
+                return 3
 
         raise IllegalInstruction(f"Unknown opcode {hex(opcode)} at {hex(self.pc)}")
