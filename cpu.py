@@ -1,3 +1,6 @@
+import struct
+
+
 class AddressBus:
     """PLACEHOLDER CLASS - TODO: Implement"""
 
@@ -2120,5 +2123,110 @@ class GameBoyCPU:
                 value -= 1
                 addrbus.write(self.hl, value)
                 return 3
+            # =====================================================
+            case 0x09:  # add hl, bc
+                self.f &= CPUFlags.Z
+
+                # Set half carry flag
+                if ((self.hl & 0xFFF) + (self.bc & 0xFFF)) > 0xFFF:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if (self.hl + self.bc) > 0xFFFF:
+                    self.f |= CPUFlags.C
+
+                self.hl += self.bc
+                return 2
+            case 0x19:  # add hl, de
+                self.f &= CPUFlags.Z
+
+                # Set half carry flag
+                if ((self.hl & 0xFFF) + (self.de & 0xFFF)) > 0xFFF:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if (self.hl + self.de) > 0xFFFF:
+                    self.f |= CPUFlags.C
+
+                self.hl += self.de
+                return 2
+            case 0x29:  # add hl, hl
+                self.f &= CPUFlags.Z
+
+                # Set half carry flag
+                if ((self.hl & 0xFFF) + (self.hl & 0xFFF)) > 0xFFF:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if (self.hl + self.hl) > 0xFFFF:
+                    self.f |= CPUFlags.C
+
+                self.hl += self.hl
+                return 2
+            case 0x09:  # add hl, sp
+                self.f &= CPUFlags.Z
+
+                # Set half carry flag
+                if ((self.hl & 0xFFF) + (self.sp & 0xFFF)) > 0xFFF:
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if (self.hl + self.sp) > 0xFFFF:
+                    self.f |= CPUFlags.C
+
+                self.hl += self.sp
+                return 2
+            # =====================================================
+            case 0xE8:  # add sp, imm8s
+                # NOTE: second operand (imm8s) is SIGNED - -127 to +127
+                imm8s = addrbus.read(self._advance_pc())
+                imm8s = struct.unpack("b", bytes([imm8s]))[0]
+
+                # Set half carry flag
+                if ((imm8s + self.sp) & 0xF) < (self.sp & 0xF):
+                    self.f |= CPUFlags.H
+
+                # Set carry flag
+                if ((imm8s + self.sp) & 0xFF) < (self.sp & 0xFF):
+                    self.f |= CPUFlags.C
+
+                self.sp += imm8s
+
+                return 4
+            # =====================================================
+            case 0x03:  # inc bc
+                self.bc += 1
+
+                return 2
+            case 0x13:  # inc de
+                self.de += 1
+
+                return 2
+            case 0x23:  # inc hl
+                self.hl += 1
+
+                return 2
+            case 0x33:  # inc sp
+                self.sp += 1
+
+                return 2
+            # =====================================================
+            case 0x0B:  # dec bc
+                self.bc -= 1
+
+                return 2
+            case 0x1B:  # dec de
+                self.de -= 1
+
+                return 2
+            case 0x2B:  # dec hl
+                self.hl -= 1
+
+                return 2
+            case 0x3B:  # dec sp
+                self.sp -= 1
+
+                return 2
+            # =====================================================
 
         raise IllegalInstruction(f"Unknown opcode {hex(opcode)} at {hex(self.pc)}")
