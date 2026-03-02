@@ -1,4 +1,5 @@
 import struct
+from typing import Tuple
 
 
 class AddressBus:
@@ -98,6 +99,38 @@ class GameBoyCPU:
         self._di_state = ArmState.NOT_ARMED
 
         self._ime = False
+
+    @staticmethod
+    def _rotate_left_8(value: int) -> Tuple[int, int]:
+        # Performs an 8-bit bit rotation to the left on the provided value
+        shifted = value << 1
+        old_edge_bit = (shifted & 0x100) >> 8
+
+        return ((shifted & 0xFF) | old_edge_bit, old_edge_bit)
+
+    @staticmethod
+    def _rotate_right_8(value: int) -> Tuple[int, int]:
+        # Performs an 8-bit bit rotation to the right on the provided value
+        old_edge_bit = value & 0b1
+        shifted = value >> 1
+
+        return (shifted | (old_edge_bit << 7), old_edge_bit)
+
+    @staticmethod
+    def _rotate_left_9(value: int) -> Tuple[int, int]:
+        # Performs a 9-bit bit rotation to the left on the provided value
+        shifted = value << 1
+        old_edge_bit = (shifted & 0x200) >> 9
+
+        return ((shifted & 0x1FF) | old_edge_bit, old_edge_bit)
+
+    @staticmethod
+    def _rotate_right_9(value: int) -> Tuple[int, int]:
+        # Performs a 9-bit bit rotation to the right on the provided value
+        old_edge_bit = value & 0b1
+        shifted = value >> 1
+
+        return (shifted | (old_edge_bit << 8), old_edge_bit)
 
     @property
     def pc(self) -> int:
@@ -533,6 +566,16 @@ class GameBoyCPU:
         value = addrbus.readw(self.sp)
         self.sp += 1
         return value
+
+    def _get_n_and_carry_as_9bit(self, n: int) -> int:
+        # Returns a 9-bit integer in the format of cnnnnnnnn
+        carry_bit = (self.f | CPUFlags.C) >> 4
+        return (carry_bit << 8) | n
+
+    def _get_carry_and_n_as_9bit(self, n: int) -> int:
+        # Returns a 9-bit integer in the format of nnnnnnnnc
+        carry_bit = (self.f | CPUFlags.C) >> 4
+        return (n << 1) | carry_bit
 
     def execute_instruction(self, addrbus: AddressBus) -> int:
         """Reads and executes a CPU instruction.
@@ -2435,6 +2478,50 @@ class GameBoyCPU:
             case 0xFB:  # ei
                 self.ei_armed = True
                 return 1
+            # =====================================================
+            case 0x07: # rlca
+                self.f = 0
+
+                rotation = self._rotate_left_8(self.a)
+
+                if rotation[0] == 0:
+                    self.f |= CPUFlags.Z
+
+                self.f |= (CPUFlags.C & (rotation[1] << 4))
+                self.a = rotation[0]
+
+                return 1
+            case 0x17: # rla
+                self.f = 0
+
+                rotation = self._rotate_left_9(self._get_carry_and_n_as_9bit(self.a))
+
+                self.a = rotation[0] & 0xFF
+                self.f |= CPUFlags.C & ((rotation[0] & 0x100) >> 4)
+
+                return 1
+            case 0x0F: # rrca
+                self.f = 0
+
+                rotation = self._rotate_right_8(self.a)
+
+                if rotation[0] == 0:
+                    self.f |= CPUFlags.Z
+
+                self.f |= (CPUFlags.C & (rotation[1] << 4))
+                self.a = rotation[0]
+
+                return 1
+            case 0x1f: # rra
+                self.f = 0
+
+                rotation = self._rotate_right_9(self._get_n_and_carry_as_9bit(self.a))
+
+                self.a = rotation[0] & 0xFF
+                self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
+
+                return 1
+
             # Some opcodes are prefixed with 0xCB
             case 0xCB:
                 opcode2 = addrbus.read(self._advance_pc())
@@ -2530,6 +2617,358 @@ class GameBoyCPU:
                         value = (lower_nibble << 4) | upper_nibble
                         addrbus.write(self.hl, value)
                         return 4
+                    # =====================================================
+                    case 0x07: # rlc a
+                        self.f = 0
+
+                        rotation = self._rotate_left_8(self.a)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.a = rotation[0]
+
+                        return 2
+                    case 0x00: # rlc b
+                        self.f = 0
+
+                        rotation = self._rotate_left_8(self.b)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.b = rotation[0]
+
+                        return 2
+                    case 0x01: # rlc c
+                        self.f = 0
+
+                        rotation = self._rotate_left_8(self.c)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.c = rotation[0]
+
+                        return 2
+                    case 0x02: # rlc d
+                        self.f = 0
+
+                        rotation = self._rotate_left_8(self.d)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.d = rotation[0]
+
+                        return 2
+                    case 0x03: # rlc e
+                        self.f = 0
+
+                        rotation = self._rotate_left_8(self.e)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.e = rotation[0]
+
+                        return 2
+                    case 0x04: # rlc h
+                        self.f = 0
+
+                        rotation = self._rotate_left_8(self.h)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.h = rotation[0]
+
+                        return 2
+                    case 0x05: # rlc l
+                        self.f = 0
+
+                        rotation = self._rotate_left_8(self.l)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.l = rotation[0]
+
+                        return 2
+                    case 0x06: # rlc [hl]
+                        self.f = 0
+
+                        value = addrbus.read(self.hl)
+
+                        rotation = self._rotate_left_8(value)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        addrbus.write(self.hl, rotation[0])
+
+                        return 4
+                    # =====================================================
+                    case 0x17: # rl a
+                        self.f = 0
+
+                        rotation = self._rotate_left_9(self._get_carry_and_n_as_9bit(self.a))
+
+                        self.a = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x100) >> 4)
+
+                        return 2
+                    case 0x10: # rl b
+                        self.f = 0
+
+                        rotation = self._rotate_left_9(self._get_carry_and_n_as_9bit(self.b))
+
+                        self.b = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x100) >> 4)
+
+                        return 2
+                    case 0x11: # rl c
+                        self.f = 0
+
+                        rotation = self._rotate_left_9(self._get_carry_and_n_as_9bit(self.c))
+
+                        self.c = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x100) >> 4)
+
+                        return 2
+                    case 0x12: # rl d
+                        self.f = 0
+
+                        rotation = self._rotate_left_9(self._get_carry_and_n_as_9bit(self.d))
+
+                        self.d = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x100) >> 4)
+
+                        return 2
+                    case 0x13: # rl e
+                        self.f = 0
+
+                        rotation = self._rotate_left_9(self._get_carry_and_n_as_9bit(self.e))
+
+                        self.e = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x100) >> 4)
+
+                        return 2
+                    case 0x14: # rl h
+                        self.f = 0
+
+                        rotation = self._rotate_left_9(self._get_carry_and_n_as_9bit(self.h))
+
+                        self.h = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x100) >> 4)
+
+                        return 2
+                    case 0x15: # rl l
+                        self.f = 0
+
+                        rotation = self._rotate_left_9(self._get_carry_and_n_as_9bit(self.l))
+
+                        self.l = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x100) >> 4)
+
+                        return 2
+                    case 0x16: # rl [hl]
+                        self.f = 0
+
+                        value = addrbus.read(self.hl)
+
+                        rotation = self._rotate_left_9(self._get_carry_and_n_as_9bit(value))
+
+                        value = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x100) >> 4)
+
+                        addrbus.write(self.hl, value)
+                        return 4
+                    # =====================================================
+                    case 0x0F: # rrc a
+                        self.f = 0
+
+                        rotation = self._rotate_right_8(self.a)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.a = rotation[0]
+
+                        return 2
+                    case 0x08: # rrc b
+                        self.f = 0
+
+                        rotation = self._rotate_right_8(self.b)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.b = rotation[0]
+
+                        return 2
+                    case 0x09: # rrc c
+                        self.f = 0
+
+                        rotation = self._rotate_right_8(self.c)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.c = rotation[0]
+
+                        return 2
+                    case 0x0A: # rrc d
+                        self.f = 0
+
+                        rotation = self._rotate_right_8(self.d)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.d = rotation[0]
+
+                        return 2
+                    case 0x0B: # rrc e
+                        self.f = 0
+
+                        rotation = self._rotate_right_8(self.e)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.e = rotation[0]
+
+                        return 2
+                    case 0x0C: # rrc h
+                        self.f = 0
+
+                        rotation = self._rotate_right_8(self.h)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.h = rotation[0]
+
+                        return 2
+                    case 0x0D: # rrc l
+                        self.f = 0
+
+                        rotation = self._rotate_right_8(self.l)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        self.l = rotation[0]
+
+                        return 2
+                    case 0x0E: # rrc [hl]
+                        self.f = 0
+
+                        value = addrbus.read(self.hl)
+
+                        rotation = self._rotate_right_8(value)
+
+                        if rotation[0] == 0:
+                            self.f |= CPUFlags.Z
+
+                        self.f |= (CPUFlags.C & (rotation[1] << 4))
+                        value = rotation[0]
+
+                        addrbus.write(self.hl, value)
+                        return 4
+                    # =====================================================
+                    case 0x1F: # rr a
+                        self.f = 0
+
+                        rotation = self._rotate_right_9(self._get_n_and_carry_as_9bit(self.a))
+
+                        self.a = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
+
+                        return 2
+                    case 0x18: # rr b
+                        self.f = 0
+
+                        rotation = self._rotate_right_9(self._get_n_and_carry_as_9bit(self.b))
+
+                        self.b = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
+
+                        return 2
+                    case 0x19: # rr c
+                        self.f = 0
+
+                        rotation = self._rotate_right_9(self._get_n_and_carry_as_9bit(self.c))
+
+                        self.c = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
+
+                        return 2
+                    case 0x1A: # rr d
+                        self.f = 0
+
+                        rotation = self._rotate_right_9(self._get_n_and_carry_as_9bit(self.d))
+
+                        self.d = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
+
+                        return 2
+                    case 0x1B: # rr e
+                        self.f = 0
+
+                        rotation = self._rotate_right_9(self._get_n_and_carry_as_9bit(self.e))
+
+                        self.e = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
+
+                        return 2
+                    case 0x1C: # rr h
+                        self.f = 0
+
+                        rotation = self._rotate_right_9(self._get_n_and_carry_as_9bit(self.h))
+
+                        self.h = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
+
+                        return 2
+                    case 0x1D: # rr l
+                        self.f = 0
+
+                        rotation = self._rotate_right_9(self._get_n_and_carry_as_9bit(self.l))
+
+                        self.l = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
+
+                        return 2
+                    case 0x1E: # rr [hl]
+                        self.f = 0
+
+                        value = addrbus.read(self.hl)
+
+                        rotation = self._rotate_right_9(self._get_n_and_carry_as_9bit(value))
+
+                        value = rotation[0] & 0xFF
+                        self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
+
+                        addrbus.write(self.hl, value)
+                        return 4
+                    # =====================================================
 
                 raise IllegalInstruction(
                     f"Unknown opcode {hex(opcode)} {hex(opcode2)} at {hex(self.pc)}"
