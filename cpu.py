@@ -2554,6 +2554,224 @@ class GameBoyCPU:
                 self.f |= CPUFlags.C & ((rotation[0] & 0x1) << 4)
 
                 return 1
+            # =====================================================
+            case 0xC3:  # jp imm16
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self.pc = address
+                return 3
+            case 0xC2:  # jp nz, imm16
+                if not (self.f & CPUFlags.Z):
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self.pc = address
+                return 4
+            case 0xCA:  # jp z, imm16
+                if self.f & CPUFlags.Z:
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self.pc = address
+                return 4
+            case 0xC2:  # jp nz, imm16
+                if not (self.f & CPUFlags.Z):
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self.pc = address
+                return 4
+            case 0xCA:  # jp z, imm16
+                if self.f & CPUFlags.Z:
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self.pc = address
+                return 4
+            case 0xD2:  # jp nc, imm16
+                if not (self.f & CPUFlags.C):
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self.pc = address
+                return 4
+            case 0xDA:  # jp c, imm16
+                if self.f & CPUFlags.C:
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self.pc = address
+                return 4
+            case 0xE9:  # jp hl
+                self.pc = self.hl
+                return 1
+            # =====================================================
+            case 0x18:  # jr imm8s
+                offset = addrbus.read(self._advance_pc())
+                offset = struct.unpack("b", bytes([offset]))[0]
+                self.pc += offset
+                return 2
+            case 0x20:  # jr nz, imm8s
+                if not (self.f & CPUFlags.Z):
+                    return 2
+
+                offset = addrbus.read(self._advance_pc())
+                offset = struct.unpack("b", bytes([offset]))[0]
+                self.pc += offset
+                return 3
+            case 0x28:  # jr z, imm8s
+                if self.f & CPUFlags.Z:
+                    return 2
+
+                offset = addrbus.read(self._advance_pc())
+                offset = struct.unpack("b", bytes([offset]))[0]
+                self.pc += offset
+                return 3
+            case 0x30:  # jr nc, imm8s
+                if not (self.f & CPUFlags.C):
+                    return 2
+
+                offset = addrbus.read(self._advance_pc())
+                offset = struct.unpack("b", bytes([offset]))[0]
+                self.pc += offset
+                return 3
+            case 0x38:  # jr c, imm8s
+                if self.f & CPUFlags.C:
+                    return 2
+
+                offset = addrbus.read(self._advance_pc())
+                offset = struct.unpack("b", bytes([offset]))[0]
+                self.pc += offset
+                return 3
+            # =====================================================
+            case 0xCD:  # call imm16
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self._stack_push(addrbus, self.pc)
+                self.pc = address
+                return 3
+            case 0xC4:  # call nz, imm16
+                if not (self.f & CPUFlags.Z):
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self._stack_push(addrbus, self.pc)
+                self.pc = address
+                return 6
+            case 0xCC:  # call z, imm16
+                if self.f & CPUFlags.Z:
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self._stack_push(addrbus, self.pc)
+                self.pc = address
+                return 6
+            case 0xD4:  # call nc, imm16
+                if not (self.f & CPUFlags.C):
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self._stack_push(addrbus, self.pc)
+                self.pc = address
+                return 6
+            case 0xDC:  # call c, imm16
+                if self.f & CPUFlags.C:
+                    return 3
+
+                addr_lsb = addrbus.read(self._advance_pc())
+                addr_msb = addrbus.read(self._advance_pc())
+                address = addr_lsb | (addr_msb << 8)
+                self._stack_push(addrbus, self.pc)
+                self.pc = address
+                return 6
+            # =====================================================
+            case 0xC7:  # rst 0x00
+                self._stack_push(addrbus, self.pc)
+                self.pc = 0x0000
+                return 8
+            case 0xCF:  # rst 0x08
+                self._stack_push(addrbus, self.pc)
+                self.pc = 0x0008
+                return 8
+            case 0xD7:  # rst 0x10
+                self._stack_push(addrbus, self.pc)
+                self.pc = 0x0010
+                return 8
+            case 0xDF:  # rst 0x18
+                self._stack_push(addrbus, self.pc)
+                self.pc = 0x0018
+                return 8
+            case 0xE7:  # rst 0x20
+                self._stack_push(addrbus, self.pc)
+                self.pc = 0x0020
+                return 8
+            case 0xEF:  # rst 0x28
+                self._stack_push(addrbus, self.pc)
+                self.pc = 0x0028
+                return 8
+            case 0xF7:  # rst 0x30
+                self._stack_push(addrbus, self.pc)
+                self.pc = 0x0030
+                return 8
+            case 0xFF:  # rst 0x38
+                # 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 0x00 0x39 ...
+                self._stack_push(addrbus, self.pc)
+                self.pc = 0x0038
+                return 8
+            # =====================================================
+            case 0xC9:  # ret
+                self.pc = self._stack_pop(addrbus)
+                return 4
+            case 0xC0:  # ret nz
+                if not (self.f & CPUFlags.Z):
+                    return 3
+
+                self.pc = self._stack_pop(addrbus)
+                return 5
+            case 0xC8:  # ret z
+                if self.f & CPUFlags.Z:
+                    return 3
+
+                self.pc = self._stack_pop(addrbus)
+                return 5
+            case 0xD0:  # ret nc
+                if not (self.f & CPUFlags.C):
+                    return 3
+
+                self.pc = self._stack_pop(addrbus)
+                return 5
+            case 0xD8:  # ret c
+                if self.f & CPUFlags.C:
+                    return 3
+
+                self.pc = self._stack_pop(addrbus)
+                return 5
+            case 0xD9:  # reti
+                self.pc = self._stack_pop(addrbus)
+                self._ime = True
+                self._ei_state = ArmState.NOT_ARMED
+                self._di_state = ArmState.NOT_ARMED
+                return 4
 
             # Some opcodes are prefixed with 0xCB
             case 0xCB:
