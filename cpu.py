@@ -132,6 +132,39 @@ class GameBoyCPU:
 
         return (shifted | (old_edge_bit << 8), old_edge_bit)
 
+    @staticmethod
+    def _explode_byte(byte: int) -> list[int]:
+        # Returns a list of individual bits in the provided byte
+
+        return [
+            (byte & 0x80) >> 7,
+            (byte & 0x40) >> 6,
+            (byte & 0x20) >> 5,
+            (byte & 0x10) >> 4,
+            (byte & 0x8) >> 3,
+            (byte & 0x4) >> 2,
+            (byte & 0x2) >> 1,
+            (byte & 0x1),
+        ]
+
+    @staticmethod
+    def _assemble_bits(bits: list[int]) -> int:
+        # Returns a byte assembled from the provided list of 8 bits
+
+        if len(bits) != 8:
+            raise ValueError("Bits list is incomplete/too long (len(bits) != 8)")
+
+        return (
+            (bits[7] << 7)
+            | (bits[6] << 6)
+            | (bits[5] << 5)
+            | (bits[4] << 4)
+            | (bits[3] << 3)
+            | (bits[2] << 2)
+            | (bits[1] << 1)
+            | bits[0]
+        )
+
     @property
     def pc(self) -> int:
         """Gets the current value of the program counter (PC)
@@ -3276,6 +3309,183 @@ class GameBoyCPU:
                         self.f |= CPUFlags.C & ((value & 0x1) << 4)
                         value = shifted
 
+                        addrbus.write(self.hl, value)
+                        return 4
+                    # =====================================================
+                    case 0x47:  # bit imm8, a
+                        self.f = CPUFlags.H | (self.f & CPUFlags.C)
+
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bit = self._explode_byte(self.a)[bit_idx]
+
+                        self.f |= CPUFlags.Z & ((~(bit) & 0b1) << 7)
+
+                        return 2
+                    case 0x40:  # bit imm8, b
+                        self.f = CPUFlags.H | (self.f & CPUFlags.C)
+
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bit = self._explode_byte(self.b)[bit_idx]
+
+                        self.f |= CPUFlags.Z & ((~(bit) & 0b1) << 7)
+
+                        return 2
+                    case 0x41:  # bit imm8, c
+                        self.f = CPUFlags.H | (self.f & CPUFlags.C)
+
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bit = self._explode_byte(self.c)[bit_idx]
+
+                        self.f |= CPUFlags.Z & ((~(bit) & 0b1) << 7)
+
+                        return 2
+                    case 0x42:  # bit imm8, d
+                        self.f = CPUFlags.H | (self.f & CPUFlags.C)
+
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bit = self._explode_byte(self.d)[bit_idx]
+
+                        self.f |= CPUFlags.Z & ((~(bit) & 0b1) << 7)
+
+                        return 2
+                    case 0x43:  # bit imm8, e
+                        self.f = CPUFlags.H | (self.f & CPUFlags.C)
+
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bit = self._explode_byte(self.e)[bit_idx]
+
+                        self.f |= CPUFlags.Z & ((~(bit) & 0b1) << 7)
+
+                        return 2
+                    case 0x44:  # bit imm8, h
+                        self.f = CPUFlags.H | (self.f & CPUFlags.C)
+
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bit = self._explode_byte(self.h)[bit_idx]
+
+                        self.f |= CPUFlags.Z & ((~(bit) & 0b1) << 7)
+
+                        return 2
+                    case 0x45:  # bit imm8, l
+                        self.f = CPUFlags.H | (self.f & CPUFlags.C)
+
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bit = self._explode_byte(self.l)[bit_idx]
+
+                        self.f |= CPUFlags.Z & ((~(bit) & 0b1) << 7)
+
+                        return 2
+                    case 0x46:  # bit imm8, [hl]
+                        self.f = CPUFlags.H | (self.f & CPUFlags.C)
+
+                        value = addrbus.read(self.hl)
+
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bit = self._explode_byte(value)[bit_idx]
+
+                        self.f |= CPUFlags.Z & ((~(bit) & 0b1) << 7)
+
+                        return 4
+                    # =====================================================
+                    case 0xC7:  # set imm8, a
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.a)
+                        bits[bit_idx] = 1
+                        self.a = self._assemble_bits(bits)
+                        return 2
+                    case 0xC0:  # set imm8, b
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.b)
+                        bits[bit_idx] = 1
+                        self.b = self._assemble_bits(bits)
+                        return 2
+                    case 0xC1:  # set imm8, c
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.c)
+                        bits[bit_idx] = 1
+                        self.c = self._assemble_bits(bits)
+                        return 2
+                    case 0xC2:  # set imm8, d
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.d)
+                        bits[bit_idx] = 1
+                        self.d = self._assemble_bits(bits)
+                        return 2
+                    case 0xC3:  # set imm8, e
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.e)
+                        bits[bit_idx] = 1
+                        self.e = self._assemble_bits(bits)
+                        return 2
+                    case 0xC4:  # set imm8, h
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.h)
+                        bits[bit_idx] = 1
+                        self.h = self._assemble_bits(bits)
+                        return 2
+                    case 0xC5:  # set imm8, l
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.l)
+                        bits[bit_idx] = 1
+                        self.l = self._assemble_bits(bits)
+                        return 2
+                    case 0xC6:  # set imm8, [hl]
+                        value = addrbus.read(self.hl)
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(value)
+                        bits[bit_idx] = 1
+                        value = self._assemble_bits(bits)
+                        addrbus.write(self.hl, value)
+                        return 4
+                    # =====================================================
+                    case 0x87:  # res imm8, a
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.a)
+                        bits[bit_idx] = 0
+                        self.a = self._assemble_bits(bits)
+                        return 2
+                    case 0x80:  # res imm8, b
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.b)
+                        bits[bit_idx] = 0
+                        self.b = self._assemble_bits(bits)
+                        return 2
+                    case 0x81:  # res imm8, c
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.c)
+                        bits[bit_idx] = 0
+                        self.c = self._assemble_bits(bits)
+                        return 2
+                    case 0x82:  # res imm8, d
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.d)
+                        bits[bit_idx] = 0
+                        self.d = self._assemble_bits(bits)
+                        return 2
+                    case 0x83:  # res imm8, e
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.e)
+                        bits[bit_idx] = 0
+                        self.e = self._assemble_bits(bits)
+                        return 2
+                    case 0x84:  # res imm8, h
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.h)
+                        bits[bit_idx] = 0
+                        self.h = self._assemble_bits(bits)
+                        return 2
+                    case 0x85:  # res imm8, l
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(self.l)
+                        bits[bit_idx] = 0
+                        self.l = self._assemble_bits(bits)
+                        return 2
+                    case 0x86:  # res imm8, [hl]
+                        value = addrbus.read(self.hl)
+                        bit_idx = addrbus.read(self._advance_pc()) & 0x7
+                        bits = self._explode_byte(value)
+                        bits[bit_idx] = 0
+                        value = self._assemble_bits(bits)
                         addrbus.write(self.hl, value)
                         return 4
 
